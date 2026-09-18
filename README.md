@@ -37,7 +37,7 @@ Before trying the `out-of-capacity` helper right away, try gradually upgrading t
 
 ## State Storage Backend
 
-After the successful creation of the desired instance, it would be better to persist the state by migrating to a remote backend. For this need, you can use Oracle's AWS S3 compatible Bucket Service's versioned Always Free Tier to store the state file, you can follow [the official guideline](https://developer.hashicorp.com/terraform/language/backend/oci). 
+After the successful creation of the desired instance, it would be better to persist the state by migrating to a remote backend. For this need, you can use Oracle's AWS S3 compatible Bucket Service's versioned Always Free Tier to store the state file, you can follow [the official guideline](https://developer.hashicorp.com/terraform/language/backend/oci).
 
 ```hcl
 # main_override.tf
