@@ -1,26 +1,31 @@
 variable "fingerprint" {
-  description = "Fingerprint of oci api private key"
+  description = "Fingerprint of oci api private key. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
+  default     = null
 }
 
 variable "private_key_path" {
-  description = "Path to oci api private key used"
+  description = "Path to oci api private key used. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
+  default     = null
 }
 
 variable "region" {
-  description = "The oci region where resources will be created"
+  description = "The oci region where resources will be created. Leave unset to use the region from the OCI CLI configuration file (~/.oci/config)."
   type        = string
+  default     = null
 }
 
 variable "tenancy_ocid" {
-  description = "Tenancy ocid where to create the sources"
+  description = "Tenancy ocid where to create the sources. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
+  default     = null
 }
 
 variable "user_ocid" {
-  description = "Ocid of user that terraform will use to create the resources"
+  description = "Ocid of user that terraform will use to create the resources. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
+  default     = null
 }
 
 variable "compartment_ocid" {
@@ -34,9 +39,14 @@ variable "instance_name" {
 }
 
 variable "instance_ad_number" {
-  default     = 1
-  description = "The availability domain number of the instance. If none is provided, it will start with AD-1 and continue in round-robin."
+  default     = 0
+  description = "Zero-based index of the availability domain to launch the instance in. Wraps around (round-robin) when the region has fewer availability domains."
   type        = number
+
+  validation {
+    condition     = var.instance_ad_number >= 0
+    error_message = "instance_ad_number must be a zero-based availability domain index (0 for the first AD)."
+  }
 }
 
 variable "instance_count" {
@@ -100,12 +110,6 @@ variable "public_ip" {
 
 variable "num_instances" {
   default = "1"
-}
-
-variable "availability_domain" {
-  default     = 3
-  description = "Availability Domain of the instance"
-  type        = number
 }
 
 variable "instance_shape" {

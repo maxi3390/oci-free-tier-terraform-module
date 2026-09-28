@@ -55,13 +55,12 @@ resource "oci_core_default_route_table" "default_route_table" {
 }
 
 resource "oci_core_subnet" "atlas_subnet" {
-  availability_domain = data.oci_identity_availability_domain.ad.name
-  cidr_block          = var.subnet_cidr_block
-  display_name        = format("%sSubnet", replace(title(var.instance_name), "/\\s/", ""))
-  dns_label           = format("%ssubnet", lower(replace(var.instance_name, "/\\s/", "")))
-  security_list_ids   = [oci_core_security_list.atlas_security_list.id]
-  compartment_id      = var.compartment_ocid
-  vcn_id              = oci_core_vcn.atlas_vcn.id
-  route_table_id      = oci_core_vcn.atlas_vcn.default_route_table_id
-  dhcp_options_id     = oci_core_vcn.atlas_vcn.default_dhcp_options_id
+  cidr_block        = var.subnet_cidr_block
+  display_name      = format("%sSubnet", replace(title(var.instance_name), "/\\s/", ""))
+  dns_label         = format("%ssubnet", lower(replace(var.instance_name, "/\\s/", "")))
+  security_list_ids = [oci_core_security_list.atlas_security_list.id]
+  compartment_id    = var.compartment_ocid
+  vcn_id            = oci_core_vcn.atlas_vcn.id
+  route_table_id    = oci_core_vcn.atlas_vcn.default_route_table_id
+  dhcp_options_id   = oci_core_vcn.atlas_vcn.default_dhcp_options_id
 }

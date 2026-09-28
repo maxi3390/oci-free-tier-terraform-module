@@ -1,25 +1,32 @@
 # provider identity parameters
-
-tenancy_ocid     = "<tenancy OCID>"
-user_ocid        = "<user OCID>"
-fingerprint      = "<PEM key fingerprint>"
-region           = "<region in which to operate, example: us-ashburn-1, eu-frankfurt-1>"
-private_key_path = "<path to the private key that matches the fingerprint above>"
-
-# general oci parameters
+#
+# Minimal config: if you have the OCI CLI configured (~/.oci/config), you can
+# omit tenancy_ocid, user_ocid, fingerprint, private_key_path and region
+# entirely and only set the variables below.
 
 compartment_ocid = "<compartment OCID>"
+instance_name    = "Atlas"
+ssh_public_keys  = "<ssh public key>"
+
+# provider identity parameters (only needed without ~/.oci/config)
+
+# tenancy_ocid     = "<tenancy OCID>"
+# user_ocid        = "<user OCID>"
+# fingerprint      = "<PEM key fingerprint>"
+# region           = "<region in which to operate, example: us-ashburn-1, eu-frankfurt-1>"
+# private_key_path = "<path to the private key that matches the fingerprint above>"
+
+# general oci parameters
 
 # compute instance parameters
 
 num_instances                       = 1
-availability_domain                 = 3
-instance_name                       = "Atlas"
+instance_ad_number                  = 0
 instance_state                      = "RUNNING"
 instance_shape                      = "VM.Standard.A1.Flex"
 instance_ocpus                      = 4
 instance_shape_config_memory_in_gbs = 24
-boot_volume_size_in_gbs							= 200
+boot_volume_size_in_gbs             = 200
 
 # operating system parameters
 

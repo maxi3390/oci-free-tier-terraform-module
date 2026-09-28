@@ -27,6 +27,20 @@ instance_ocpus                      = 1
 instance_shape_config_memory_in_gbs = 6
 ```
 
+## Minimal configuration
+
+If you have the [OCI CLI configured](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm) (`~/.oci/config`), the only required variables are:
+
+```hcl
+compartment_ocid = "<compartment OCID>"
+instance_name    = "Atlas"
+ssh_public_keys  = "<ssh public key>"
+```
+
+The provider authentication variables (`tenancy_ocid`, `user_ocid`, `fingerprint`, `private_key_path`, `region`) are optional and fall back to the OCI CLI configuration file. See `terraform.tfvars.example` for the full list.
+
+Instances are placed in availability domain `instance_ad_number` (zero-based, default `0`); the index wraps around in regions with fewer availability domains. Both Flex shapes (e.g. `VM.Standard.A1.Flex`) and non-Flex shapes (e.g. `VM.Standard.E2.1.Micro`) are supported; OCPU/memory configuration is only applied to Flex shapes.
+
 ## Helper script `out-of-capacity.sh`
 
 Out of capacity is a common error when trying to create an instance in OCI provider using the Always Free tier, this little helper script will try to apply the terraform plan until it succeeds.
