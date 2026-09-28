@@ -39,11 +39,30 @@ ssh_public_keys  = "<ssh public key>"
 
 The provider authentication variables (`tenancy_ocid`, `user_ocid`, `fingerprint`, `private_key_path`, `region`) are optional and fall back to the OCI CLI configuration file. See `terraform.tfvars.example` for the full list.
 
-Instances are placed in availability domain `instance_ad_number` (zero-based, default `0`); the index wraps around in regions with fewer availability domains. Both Flex shapes (e.g. `VM.Standard.A1.Flex`) and non-Flex shapes (e.g. `VM.Standard.E2.1.Micro`) are supported; OCPU/memory configuration is only applied to Flex shapes.
+Instances are placed in availability domain `instance_ad_number` (zero-based, default `0`); the index wraps around in regions with fewer availability domains. Set `spread_across_ads = true` to distribute instances round-robin across all availability domains instead — this improves the odds against "Out of Capacity" in multi-instance deploys. Both Flex shapes (e.g. `VM.Standard.A1.Flex`) and non-Flex shapes (e.g. `VM.Standard.E2.1.Micro`) are supported; OCPU/memory configuration is only applied to Flex shapes.
+
+The latest Canonical Ubuntu image compatible with the shape is selected automatically (`image_os_version`, default `24.04`). To pin a specific image, set `instance_image_ocid` as a per-region map:
+
+```hcl
+instance_image_ocid = { "us-ashburn-1" = "ocid1.image.oc1.iad.aaaa..." }
+```
+
+## Free tier limits
+
+The module validates your configuration against the Always Free allowances:
+
+- **Block storage (hard limit)**: 200 GB in total. `num_instances × boot_volume_size_in_gbs` must stay below 200 (e.g. `2 × 99` or `4 × 49`); plans exceeding it fail validation.
+- **A1 budget (warnings)**: 4 OCPUs and 24 GB of memory in total across all instances. Exceeding these emits a warning during plan (useful if you also consume the budget outside this module).
 
 ## Helper script `out-of-capacity.sh`
 
 Out of capacity is a common error when trying to create an instance in OCI provider using the Always Free tier, this little helper script will try to apply the terraform plan until it succeeds.
+
+It retries with a delay and gives up after a maximum number of attempts, both configurable through environment variables:
+
+```bash
+MAX_ATTEMPTS=30 SLEEP_SECONDS=60 ./out-of-capacity.sh
+```
 
 ### Suggestion
 

@@ -1,6 +1,6 @@
 resource "oci_core_instance" "atlas_instance" {
   count               = var.num_instances
-  availability_domain = element(data.oci_identity_availability_domains.ads.availability_domains, var.instance_ad_number).name
+  availability_domain = var.spread_across_ads ? element(data.oci_identity_availability_domains.ads.availability_domains, count.index).name : element(data.oci_identity_availability_domains.ads.availability_domains, var.instance_ad_number).name
   compartment_id      = var.compartment_ocid
   display_name        = format("%s${count.index}", replace(title(var.instance_name), "/\\s/", ""))
   shape               = var.instance_shape
@@ -23,7 +23,7 @@ resource "oci_core_instance" "atlas_instance" {
 
   source_details {
     source_type             = var.instance_source_type
-    source_id               = var.instance_image_ocid[var.region]
+    source_id               = coalesce(try(var.instance_image_ocid[var.region], null), try(data.oci_core_images.this.images[0].id, null))
     boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
   }
 
