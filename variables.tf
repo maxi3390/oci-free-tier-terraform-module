@@ -2,12 +2,14 @@ variable "fingerprint" {
   description = "Fingerprint of oci api private key. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
   default     = null
+  sensitive   = true
 }
 
 variable "private_key_path" {
   description = "Path to oci api private key used. Leave unset to use the OCI CLI configuration file (~/.oci/config)."
   type        = string
   default     = null
+  sensitive   = true
 }
 
 variable "region" {
@@ -34,8 +36,13 @@ variable "compartment_ocid" {
 }
 
 variable "instance_name" {
-  description = "Name of the instance."
+  description = "Name of the instance. Used to derive resource display names and DNS labels, so it must be short and alphanumeric."
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9]{0,10}$", var.instance_name))
+    error_message = "instance_name must start with a letter, contain only alphanumerics, and be at most 11 characters long so the derived DNS labels stay within OCI's 15-character limit."
+  }
 }
 
 variable "instance_ad_number" {
@@ -49,33 +56,23 @@ variable "instance_ad_number" {
   }
 }
 
-variable "instance_count" {
-  default     = 1
-  description = "Number of identical instances to launch from a single module."
-  type        = number
-}
-
-variable "instance_state" {
-  default     = "RUNNING"
-  description = "(Updatable) The target state for the instance. Could be set to RUNNING or STOPPED."
-  type        = string
-
-  validation {
-    condition     = contains(["RUNNING", "STOPPED"], var.instance_state)
-    error_message = "Accepted values are RUNNING or STOPPED."
-  }
-}
-
 variable "ssh_public_keys" {
   default     = null
   description = "Public SSH keys to be included in the ~/.ssh/authorized_keys file for the default user on the instance. To provide multiple keys, see docs/instance_ssh_keys.adoc."
   type        = string
+  sensitive   = true
 }
 
 variable "ssh_private_key" {
   default     = null
   description = "Private SSH key for remote execution."
   type        = string
+  sensitive   = true
+
+  validation {
+    condition     = !var.auto_iptables || var.ssh_private_key != null
+    error_message = "ssh_private_key is required when auto_iptables is true."
+  }
 }
 
 variable "auto_iptables" {
@@ -98,18 +95,40 @@ variable "subnet_cidr_block" {
 
 variable "assign_public_ip" {
   default     = false
-  description = "Whether the VNIC should be assigned a public IP address."
+  description = "Whether the VNIC should be assigned a public IP address. Required for the auto_iptables remote-exec step and for public_ip = \"RESERVED\"."
   type        = bool
 }
 
 variable "public_ip" {
   default     = "NONE"
-  description = "Whether to create a Public IP to attach to primary vnic and which lifetime. Valid values are NONE, RESERVED or EPHEMERAL."
+  description = "Lifetime of the public IP attached to the primary VNIC. Valid values are NONE, RESERVED or EPHEMERAL. EPHEMERAL addresses change on stop/start; RESERVED ones are free while attached and survive reboots."
   type        = string
+
+  validation {
+    condition     = contains(["NONE", "RESERVED", "EPHEMERAL"], var.public_ip)
+    error_message = "Accepted values are NONE, RESERVED or EPHEMERAL."
+  }
+
+  validation {
+    condition     = var.public_ip != "RESERVED" || var.assign_public_ip
+    error_message = "public_ip = \"RESERVED\" requires assign_public_ip = true."
+  }
+}
+
+variable "ingress_rules" {
+  description = "Inbound security list rules. Default allows SSH from anywhere. protocol accepts tcp, udp, icmp, all (or a protocol number); port applies to tcp/udp."
+  type = list(object({
+    protocol    = string
+    port        = optional(number)
+    source      = string
+    description = optional(string)
+  }))
+  default = [{ protocol = "tcp", port = 22, source = "0.0.0.0/0" }]
 }
 
 variable "num_instances" {
-  default = "1"
+  default = 1
+  type    = number
 }
 
 variable "instance_shape" {
@@ -134,6 +153,11 @@ variable "instance_source_type" {
   default     = "image"
   description = "The source type for the instance."
   type        = string
+
+  validation {
+    condition     = var.instance_source_type == "image"
+    error_message = "Only the \"image\" source type is supported."
+  }
 }
 
 variable "boot_volume_size_in_gbs" {

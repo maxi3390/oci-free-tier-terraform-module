@@ -95,7 +95,25 @@ $ terraform apply -auto-approve
 
 ## Allow Inbound Traffic
 
-To allow inbound traffic from anywhere you have to delete an INPUT REJECT rule from the iptables. If you choose to do these steps automatically, a remote-exec step is configured to handle this process if you set `auto_iptables` and `ssh_private_key` variables under the `terraform.tfvars`.
+By default the security list only allows inbound SSH (port 22) from anywhere, plus ICMP path-MTU traffic. Additional inbound rules are configured through `ingress_rules`:
+
+```hcl
+ingress_rules = [
+  { protocol = "tcp", port = 80,  source = "0.0.0.0/0" },
+  { protocol = "tcp", port = 443, source = "0.0.0.0/0" },
+]
+```
+
+To allow inbound traffic from anywhere on the instance itself you also have to delete an INPUT REJECT rule from the host iptables. If you choose to do these steps automatically, a remote-exec step is configured to handle this process if you set `auto_iptables` and `ssh_private_key` variables under the `terraform.tfvars`. Note that `auto_iptables` requires a public IP (`assign_public_ip = true`).
+
+### Public IP lifetime
+
+Ephemeral public IPs change on every stop/start. Set `public_ip = "RESERVED"` (with `assign_public_ip = true`) to attach a reserved public IP, which is free while attached and survives reboots:
+
+```hcl
+assign_public_ip = true
+public_ip        = "RESERVED"
+```
 
 ### Automatic execution
 ```bash

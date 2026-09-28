@@ -2,7 +2,7 @@ resource "oci_core_instance" "atlas_instance" {
   count               = var.num_instances
   availability_domain = var.spread_across_ads ? element(data.oci_identity_availability_domains.ads.availability_domains, count.index).name : element(data.oci_identity_availability_domains.ads.availability_domains, var.instance_ad_number).name
   compartment_id      = var.compartment_ocid
-  display_name        = format("%s${count.index}", replace(title(var.instance_name), "/\\s/", ""))
+  display_name        = format("%s%d", title(replace(var.instance_name, "/\\s/", "")), count.index)
   shape               = var.instance_shape
 
   dynamic "shape_config" {
@@ -15,10 +15,10 @@ resource "oci_core_instance" "atlas_instance" {
 
   create_vnic_details {
     subnet_id                 = oci_core_subnet.atlas_subnet.id
-    display_name              = format("%sVNIC", replace(title(var.instance_name), "/\\s/", ""))
-    assign_public_ip          = true
+    display_name              = format("%sVNIC", title(replace(var.instance_name, "/\\s/", "")))
+    assign_public_ip          = var.assign_public_ip
     assign_private_dns_record = true
-    hostname_label            = format("%s${count.index}", lower(replace(var.instance_name, "/\\s/", "")))
+    hostname_label            = format("%s%d", lower(replace(var.instance_name, "/\\s/", "")), count.index)
   }
 
   source_details {
