@@ -1,25 +1,32 @@
-# provider identity parameters
-
-tenancy_ocid     = "<tenancy OCID>"
-user_ocid        = "<user OCID>"
-fingerprint      = "<PEM key fingerprint>"
-region           = "<region in which to operate, example: us-ashburn-1, eu-frankfurt-1>"
-private_key_path = "<path to the private key that matches the fingerprint above>"
-
-# general oci parameters
+# Minimal config: if you have the OCI CLI configured (~/.oci/config), you can
+# omit tenancy_ocid, user_ocid, fingerprint, private_key_path and region
+# entirely and only set the variables below.
 
 compartment_ocid = "<compartment OCID>"
+instance_name    = "Atlas"
+
+# provider identity parameters (only needed without ~/.oci/config)
+
+# tenancy_ocid     = "<tenancy OCID>"
+# user_ocid        = "<user OCID>"
+# fingerprint      = "<PEM key fingerprint>"
+# region           = "<region in which to operate, example: us-ashburn-1, eu-frankfurt-1>"
+# private_key_path = "<path to the private key that matches the fingerprint above>"
 
 # compute instance parameters
 
 num_instances                       = 1
-availability_domain                 = 3
-instance_name                       = "Atlas"
-instance_state                      = "RUNNING"
+instance_ad_number                  = 0
 instance_shape                      = "VM.Standard.A1.Flex"
 instance_ocpus                      = 4
 instance_shape_config_memory_in_gbs = 24
-boot_volume_size_in_gbs							= 200
+boot_volume_size_in_gbs             = 100
+
+# networking parameters
+
+# ingress_rules   = [{ protocol = "tcp", port = 22, source = "0.0.0.0/0" }]
+# assign_public_ip = true
+# public_ip       = "RESERVED"
 
 # operating system parameters
 
@@ -33,3 +40,11 @@ EOT
 
 auto_iptables   = false
 ssh_private_key = "<path to the private key one of the public keys you have provided>"
+
+# Optional add-ons (disabled by default)
+
+# object_storage_enabled = true
+# object_storage_buckets = [{ name = "my-backups", storage_tier = "Standard" }]
+# autonomous_database_enabled        = true
+# autonomous_database_workload       = "OLTP"
+# autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>" # optional; generated when unset
