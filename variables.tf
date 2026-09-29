@@ -195,8 +195,9 @@ variable "ingress_rules" {
 }
 
 variable "num_instances" {
-  default = 1
-  type    = number
+  default     = 1
+  description = "Number of instances to create."
+  type        = number
 }
 
 variable "instance_shape" {
