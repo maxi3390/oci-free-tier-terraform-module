@@ -3,6 +3,8 @@ resource "oci_core_vcn" "atlas_vcn" {
   compartment_id = var.compartment_ocid
   display_name   = format("%sVCN", replace(title(var.instance_name), "/\\s/", ""))
   dns_label      = format("%svcn", lower(replace(var.instance_name, "/\\s/", "")))
+
+  freeform_tags = local.tags
 }
 
 resource "oci_core_security_list" "atlas_security_list" {
@@ -55,12 +57,16 @@ resource "oci_core_security_list" "atlas_security_list" {
       code = 4
     }
   }
+
+  freeform_tags = local.tags
 }
 
 resource "oci_core_internet_gateway" "atlas_internet_gateway" {
   compartment_id = var.compartment_ocid
   display_name   = format("%sIGW", replace(title(var.instance_name), "/\\s/", ""))
   vcn_id         = oci_core_vcn.atlas_vcn.id
+
+  freeform_tags = local.tags
 }
 
 resource "oci_core_default_route_table" "default_route_table" {
@@ -72,6 +78,8 @@ resource "oci_core_default_route_table" "default_route_table" {
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.atlas_internet_gateway.id
   }
+
+  freeform_tags = local.tags
 }
 
 resource "oci_core_subnet" "atlas_subnet" {
@@ -83,6 +91,8 @@ resource "oci_core_subnet" "atlas_subnet" {
   vcn_id            = oci_core_vcn.atlas_vcn.id
   route_table_id    = oci_core_vcn.atlas_vcn.default_route_table_id
   dhcp_options_id   = oci_core_vcn.atlas_vcn.default_dhcp_options_id
+
+  freeform_tags = local.tags
 }
 
 data "oci_core_vnic_attachments" "instance_primary" {
@@ -102,4 +112,6 @@ resource "oci_core_public_ip" "reserved" {
   lifetime       = "RESERVED"
   display_name   = format("%sPublicIP%d", title(replace(var.instance_name, "/\\s/", "")), count.index)
   private_ip_id  = data.oci_core_private_ips.instance_primary[count.index].private_ips[0].id
+
+  freeform_tags = local.tags
 }

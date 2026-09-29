@@ -34,4 +34,6 @@ resource "oci_core_instance" "atlas_instance" {
   timeouts {
     create = "60m"
   }
+
+  freeform_tags = local.tags
 }

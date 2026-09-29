@@ -1,5 +1,7 @@
-resource "null_resource" "remote-exec" {
+resource "terraform_data" "iptables" {
   count = var.auto_iptables && var.assign_public_ip ? var.num_instances : 0
+
+  triggers_replace = oci_core_instance.atlas_instance[count.index].id
 
   connection {
     agent       = false

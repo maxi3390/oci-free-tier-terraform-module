@@ -115,6 +115,12 @@ variable "public_ip" {
   }
 }
 
+variable "freeform_tags" {
+  description = "Freeform tags applied to all created resources (merged over the default { ManagedBy = \"terraform\" })."
+  type        = map(string)
+  default     = {}
+}
+
 variable "ingress_rules" {
   description = "Inbound security list rules. Default allows SSH from anywhere. protocol accepts tcp, udp, icmp, all (or a protocol number); port applies to tcp/udp."
   type = list(object({

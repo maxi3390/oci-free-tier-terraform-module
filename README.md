@@ -54,6 +54,8 @@ The module validates your configuration against the Always Free allowances:
 - **Block storage (hard limit)**: 200 GB in total. `num_instances × boot_volume_size_in_gbs` must stay below 200 (e.g. `2 × 99` or `4 × 49`); plans exceeding it fail validation.
 - **A1 budget (warnings)**: 4 OCPUs and 24 GB of memory in total across all instances. Exceeding these emits a warning during plan (useful if you also consume the budget outside this module).
 
+All created resources are tagged with `ManagedBy = "terraform"` plus anything you pass to `freeform_tags`.
+
 ## Helper script `out-of-capacity.sh`
 
 Out of capacity is a common error when trying to create an instance in OCI provider using the Always Free tier, this little helper script will try to apply the terraform plan until it succeeds.
@@ -91,7 +93,7 @@ After the change, init once again to reflect the backend change, it should be pr
 ```bash
 $ terraform init
 $ terraform apply -auto-approve
-````
+```
 
 ## Allow Inbound Traffic
 
