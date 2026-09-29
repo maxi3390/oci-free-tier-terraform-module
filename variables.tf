@@ -172,7 +172,14 @@ variable "autonomous_database_admin_password" {
   default     = null
 
   validation {
-    condition     = var.autonomous_database_admin_password == null || (length(var.autonomous_database_admin_password) >= 12 && length(var.autonomous_database_admin_password) <= 30 && can(regex("[A-Z]", var.autonomous_database_admin_password)) && can(regex("[a-z]", var.autonomous_database_admin_password)) && can(regex("[0-9]", var.autonomous_database_admin_password)))
+    condition = var.autonomous_database_admin_password == null || try(
+      length(var.autonomous_database_admin_password) >= 12 &&
+      length(var.autonomous_database_admin_password) <= 30 &&
+      can(regex("[A-Z]", var.autonomous_database_admin_password)) &&
+      can(regex("[a-z]", var.autonomous_database_admin_password)) &&
+      can(regex("[0-9]", var.autonomous_database_admin_password)),
+      false
+    )
     error_message = "The ADMIN password must be 12-30 characters and contain at least one uppercase letter, one lowercase letter and one digit."
   }
 }
