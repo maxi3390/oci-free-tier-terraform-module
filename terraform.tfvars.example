@@ -40,3 +40,11 @@ EOT
 
 auto_iptables   = false
 ssh_private_key = "<path to the private key one of the public keys you have provided>"
+
+# Optional add-ons (disabled by default)
+
+# object_storage_enabled = true
+# object_storage_buckets = [{ name = "my-backups", storage_tier = "Standard" }]
+# autonomous_database_enabled        = true
+# autonomous_database_workload       = "OLTP"
+# autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>"

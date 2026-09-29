@@ -18,3 +18,19 @@ output "boot_volume_ids" {
 output "instance_devices" {
   value = [for devices in data.oci_core_instance_devices.atlas_instance_devices : devices.devices]
 }
+
+output "bucket_names" {
+  value = [for bucket in oci_objectstorage_bucket.this : bucket.name]
+}
+
+output "bucket_ids" {
+  value = [for bucket in oci_objectstorage_bucket.this : bucket.id]
+}
+
+output "autonomous_database_id" {
+  value = var.autonomous_database_enabled ? oci_database_autonomous_database.this[0].id : null
+}
+
+output "autonomous_database_connection_strings" {
+  value = var.autonomous_database_enabled ? oci_database_autonomous_database.this[0].connection_strings : null
+}

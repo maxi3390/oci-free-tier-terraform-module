@@ -121,6 +121,67 @@ variable "freeform_tags" {
   default     = {}
 }
 
+variable "object_storage_enabled" {
+  description = "Create Object Storage buckets. Disabled by default."
+  type        = bool
+  default     = false
+}
+
+variable "object_storage_buckets" {
+  description = "Buckets to create when object_storage_enabled is true. Bucket names must be unique per tenancy."
+  type = list(object({
+    name         = string
+    storage_tier = optional(string, "Standard")
+    versioning   = optional(string, "Disabled")
+  }))
+  default = []
+
+  validation {
+    condition     = alltrue([for b in var.object_storage_buckets : can(regex("^[a-z0-9][a-z0-9_.-]{0,254}$", b.name))])
+    error_message = "Bucket names must be lowercase alphanumeric (dots, dashes and underscores allowed)."
+  }
+}
+
+variable "autonomous_database_enabled" {
+  description = "Create an Always Free Autonomous Database. Disabled by default."
+  type        = bool
+  default     = false
+}
+
+variable "autonomous_database_display_name" {
+  description = "Display name of the Autonomous Database."
+  type        = string
+  default     = "free-tier-db"
+}
+
+variable "autonomous_database_workload" {
+  description = "Workload type: OLTP (Autonomous Transaction Processing) or DW (Autonomous Data Warehouse)."
+  type        = string
+  default     = "OLTP"
+
+  validation {
+    condition     = contains(["OLTP", "DW"], var.autonomous_database_workload)
+    error_message = "Accepted values are OLTP or DW."
+  }
+}
+
+variable "autonomous_database_admin_password" {
+  description = "ADMIN user password for the Autonomous Database. Must follow the OCI password policy (12-30 chars, upper, lower and digit). Provide via tfvars or TF_VAR; never commit it."
+  type        = string
+  sensitive   = true
+  default     = null
+
+  validation {
+    condition     = !var.autonomous_database_enabled || var.autonomous_database_admin_password != null
+    error_message = "autonomous_database_admin_password is required when autonomous_database_enabled is true."
+  }
+
+  validation {
+    condition     = var.autonomous_database_admin_password == null || (length(var.autonomous_database_admin_password) >= 12 && length(var.autonomous_database_admin_password) <= 30 && can(regex("[A-Z]", var.autonomous_database_admin_password)) && can(regex("[a-z]", var.autonomous_database_admin_password)) && can(regex("[0-9]", var.autonomous_database_admin_password)))
+    error_message = "The ADMIN password must be 12-30 characters and contain at least one uppercase letter, one lowercase letter and one digit."
+  }
+}
+
 variable "ingress_rules" {
   description = "Inbound security list rules. Default allows SSH from anywhere. protocol accepts tcp, udp, icmp, all (or a protocol number); port applies to tcp/udp."
   type = list(object({

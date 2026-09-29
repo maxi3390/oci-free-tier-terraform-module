@@ -56,6 +56,32 @@ The module validates your configuration against the Always Free allowances:
 
 All created resources are tagged with `ManagedBy = "terraform"` plus anything you pass to `freeform_tags`.
 
+## Optional add-ons
+
+Both features below are fully optional and disabled by default; the default deploy creates none of them.
+
+### Object Storage
+
+```hcl
+object_storage_enabled = true
+object_storage_buckets = [
+  { name = "my-backups", storage_tier = "Standard" },
+  { name = "my-archive", storage_tier = "Archive", versioning = "Enabled" },
+]
+```
+
+The Always Free tier includes 10 GB of Standard and 10 GB of Archive object storage. A bucket created here can also serve as the Terraform state backend described above.
+
+### Autonomous Database
+
+```hcl
+autonomous_database_enabled        = true
+autonomous_database_workload       = "OLTP" # or "DW"
+autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>"
+```
+
+Creates one Always Free Autonomous Database (`is_free_tier = true`, 1 OCPU, auto-scaling disabled) with a public endpoint. The free allowance is 2 databases with 20 GB each; this module creates one.
+
 ## Helper script `out-of-capacity.sh`
 
 Out of capacity is a common error when trying to create an instance in OCI provider using the Always Free tier, this little helper script will try to apply the terraform plan until it succeeds.
