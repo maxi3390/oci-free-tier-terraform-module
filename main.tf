@@ -7,7 +7,7 @@ resource "terraform_data" "iptables" {
     agent       = false
     timeout     = "30m"
     host        = var.public_ip == "RESERVED" ? oci_core_public_ip.reserved[count.index].ip_address : oci_core_instance.atlas_instance[count.index].public_ip
-    user        = "ubuntu"
+    user        = var.instance_user
     private_key = file(var.ssh_private_key)
   }
 

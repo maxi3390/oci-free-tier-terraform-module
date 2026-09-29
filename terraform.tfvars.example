@@ -47,4 +47,4 @@ ssh_private_key = "<path to the private key one of the public keys you have prov
 # object_storage_buckets = [{ name = "my-backups", storage_tier = "Standard" }]
 # autonomous_database_enabled        = true
 # autonomous_database_workload       = "OLTP"
-# autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>"
+# autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>" # optional; generated when unset

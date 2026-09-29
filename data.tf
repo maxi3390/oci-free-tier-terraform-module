@@ -4,7 +4,7 @@ data "oci_core_instance_devices" "atlas_instance_devices" {
 }
 
 data "oci_identity_availability_domains" "ads" {
-  compartment_id = var.tenancy_ocid
+  compartment_id = coalesce(var.tenancy_ocid, var.compartment_ocid)
 }
 
 data "oci_core_images" "this" {

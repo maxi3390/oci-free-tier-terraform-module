@@ -47,6 +47,12 @@ The latest Canonical Ubuntu image compatible with the shape is selected automati
 instance_image_ocid = { "us-ashburn-1" = "ocid1.image.oc1.iad.aaaa..." }
 ```
 
+The image is pinned at creation time: OCI does not allow changing the image of a running instance, so later plans will not propose image updates even when a newer Ubuntu release is published. To move to a newer image, replace the instance explicitly:
+
+```bash
+terraform apply -replace="oci_core_instance.atlas_instance[0]"
+```
+
 ## Free tier limits
 
 The module validates your configuration against the Always Free allowances:
@@ -81,6 +87,8 @@ autonomous_database_admin_password = "<12-30 chars, upper, lower and digit>"
 ```
 
 Creates one Always Free Autonomous Database (`is_free_tier = true`, 1 OCPU, auto-scaling disabled) with a public endpoint. The free allowance is 2 databases with 20 GB each; this module creates one.
+
+`autonomous_database_admin_password` is optional: when unset, a policy-compliant password is generated automatically and exposed through the `autonomous_database_admin_password` output (marked sensitive).
 
 ## Helper script `out-of-capacity.sh`
 
@@ -142,6 +150,16 @@ Ephemeral public IPs change on every stop/start. Set `public_ip = "RESERVED"` (w
 assign_public_ip = true
 public_ip        = "RESERVED"
 ```
+
+### Restrict SSH to your current IP
+
+If your public IP changes over time, `update-ssh-ingress.sh` rewrites the SSH ingress rule of the security list so it only allows connections from the machine's current public IP. Wire it into cron so it runs daily (midnight in the example):
+
+```bash
+0 0 * * * SECURITY_LIST_OCID="<security list OCID>" /path/to/update-ssh-ingress.sh >> "$HOME/.update-ssh-ingress.log" 2>&1
+```
+
+Get the OCID with `terraform output -raw security_list_id`. The script requires the OCI CLI, `jq` and `curl`. Note that the security list is managed by Terraform: the next `terraform apply` reverts the SSH source to your `ingress_rules` value.
 
 ### Automatic execution
 ```bash

@@ -31,6 +31,18 @@ resource "oci_core_instance" "atlas_instance" {
     ssh_authorized_keys = var.ssh_public_keys
   }
 
+  # OCI does not allow changing the image of a running instance, so the image
+  # is pinned at creation time. To move to a newer image, replace the
+  # instance explicitly: terraform apply -replace="oci_core_instance.atlas_instance[0]"
+  lifecycle {
+    ignore_changes = [source_details[0].source_id]
+
+    precondition {
+      condition     = coalesce(try(var.instance_image_ocid[var.region], null), try(data.oci_core_images.this.images[0].id, null)) != null
+      error_message = "No image found: instance_image_ocid has no entry for the target region and no Canonical Ubuntu ${var.image_os_version} image is compatible with shape ${var.instance_shape}. Check image_os_version or pin instance_image_ocid."
+    }
+  }
+
   timeouts {
     create = "60m"
   }

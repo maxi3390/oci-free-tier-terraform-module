@@ -166,20 +166,21 @@ variable "autonomous_database_workload" {
 }
 
 variable "autonomous_database_admin_password" {
-  description = "ADMIN user password for the Autonomous Database. Must follow the OCI password policy (12-30 chars, upper, lower and digit). Provide via tfvars or TF_VAR; never commit it."
+  description = "ADMIN user password for the Autonomous Database. Must follow the OCI password policy (12-30 chars, upper, lower and digit). When unset, a compliant password is generated automatically and exposed via the autonomous_database_admin_password output. Provide via tfvars or TF_VAR; never commit it."
   type        = string
   sensitive   = true
   default     = null
 
   validation {
-    condition     = !var.autonomous_database_enabled || var.autonomous_database_admin_password != null
-    error_message = "autonomous_database_admin_password is required when autonomous_database_enabled is true."
-  }
-
-  validation {
     condition     = var.autonomous_database_admin_password == null || (length(var.autonomous_database_admin_password) >= 12 && length(var.autonomous_database_admin_password) <= 30 && can(regex("[A-Z]", var.autonomous_database_admin_password)) && can(regex("[a-z]", var.autonomous_database_admin_password)) && can(regex("[0-9]", var.autonomous_database_admin_password)))
     error_message = "The ADMIN password must be 12-30 characters and contain at least one uppercase letter, one lowercase letter and one digit."
   }
+}
+
+variable "instance_user" {
+  default     = "ubuntu"
+  description = "Default user on the instance image, used for the auto_iptables remote-exec connection (ubuntu for Canonical Ubuntu images, opc for Oracle Linux)."
+  type        = string
 }
 
 variable "ingress_rules" {
@@ -228,7 +229,7 @@ variable "instance_source_type" {
 }
 
 variable "boot_volume_size_in_gbs" {
-  default     = "100"
+  default     = 100
   description = "Boot volume size in GBs per instance. The Always Free tier includes 200 GB of block storage in total, so num_instances × boot_volume_size_in_gbs must stay below 200."
   type        = number
 

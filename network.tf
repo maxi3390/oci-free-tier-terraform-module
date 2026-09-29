@@ -103,7 +103,14 @@ data "oci_core_vnic_attachments" "instance_primary" {
 
 data "oci_core_private_ips" "instance_primary" {
   count   = var.assign_public_ip && var.public_ip == "RESERVED" ? var.num_instances : 0
-  vnic_id = data.oci_core_vnic_attachments.instance_primary[count.index].vnic_attachments[0].vnic_id
+  vnic_id = one([for attachment in data.oci_core_vnic_attachments.instance_primary[count.index].vnic_attachments : attachment.vnic_id if attachment.is_primary])
+
+  lifecycle {
+    precondition {
+      condition     = length([for attachment in data.oci_core_vnic_attachments.instance_primary[count.index].vnic_attachments : attachment.vnic_id if attachment.is_primary]) > 0
+      error_message = "No primary VNIC attachment was returned yet for instance ${oci_core_instance.atlas_instance[count.index].display_name}. This is usually OCI eventual-consistency lag right after creation; retry the plan/apply."
+    }
+  }
 }
 
 resource "oci_core_public_ip" "reserved" {
