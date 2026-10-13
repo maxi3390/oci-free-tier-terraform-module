@@ -201,10 +201,21 @@ variable "ingress_rules" {
   default = [{ protocol = "tcp", port = 22, source = "0.0.0.0/0" }]
 }
 
+variable "enforce_free_tier_limits" {
+  description = "Fail validation when the deployment exceeds the Always Free allowances: 2 instances in total, 2 A1 OCPUs and 12 GB of A1 memory in total, 200 GB of total boot volume storage and a 47 GB minimum boot volume. Set to false to lift these checks (paid account, or budget shared with resources outside this module)."
+  type        = bool
+  default     = true
+}
+
 variable "num_instances" {
   default     = 1
   description = "Number of instances to create."
   type        = number
+
+  validation {
+    condition     = !var.enforce_free_tier_limits || var.num_instances <= 2
+    error_message = "Always Free compute allows at most 2 instances in total (both VM.Standard.A1.Flex and VM.Standard.E2.1.Micro). Set enforce_free_tier_limits = false to lift this check."
+  }
 }
 
 variable "instance_shape" {
@@ -217,12 +228,22 @@ variable "instance_ocpus" {
   default     = 1
   description = "Number of OCPUs"
   type        = number
+
+  validation {
+    condition     = !var.enforce_free_tier_limits || !strcontains(var.instance_shape, "A1") || var.instance_ocpus * var.num_instances <= 2
+    error_message = "The Always Free A1 budget is 2 OCPUs in total across all instances (num_instances × instance_ocpus exceeds it). Set enforce_free_tier_limits = false to lift this check."
+  }
 }
 
 variable "instance_shape_config_memory_in_gbs" {
   default     = 6
   description = "Amount of Memory (GB)"
   type        = number
+
+  validation {
+    condition     = !var.enforce_free_tier_limits || !strcontains(var.instance_shape, "A1") || var.instance_shape_config_memory_in_gbs * var.num_instances <= 12
+    error_message = "The Always Free A1 budget is 12 GB of memory in total across all instances (num_instances × instance_shape_config_memory_in_gbs exceeds it). Set enforce_free_tier_limits = false to lift this check."
+  }
 }
 
 variable "instance_source_type" {
@@ -238,12 +259,17 @@ variable "instance_source_type" {
 
 variable "boot_volume_size_in_gbs" {
   default     = 100
-  description = "Boot volume size in GBs per instance. The Always Free tier includes 200 GB of block storage in total, so num_instances × boot_volume_size_in_gbs must stay below 200."
+  description = "Boot volume size in GBs per instance. The Always Free tier includes 200 GB of block storage in total, so num_instances × boot_volume_size_in_gbs must not exceed 200."
   type        = number
 
   validation {
-    condition     = var.num_instances * var.boot_volume_size_in_gbs < 200
-    error_message = "The Always Free tier includes 200 GB of block storage in total. num_instances × boot_volume_size_in_gbs must stay below 200 GB (e.g. 2 × 99 or 4 × 49)."
+    condition     = !var.enforce_free_tier_limits || var.boot_volume_size_in_gbs >= 47
+    error_message = "The minimum boot volume size is 47 GB. Set enforce_free_tier_limits = false to lift this check."
+  }
+
+  validation {
+    condition     = !var.enforce_free_tier_limits || var.num_instances * var.boot_volume_size_in_gbs <= 200
+    error_message = "The Always Free tier includes 200 GB of block storage in total. num_instances × boot_volume_size_in_gbs must not exceed 200 GB (e.g. 2 × 100 or 4 × 50). Set enforce_free_tier_limits = false to lift this check."
   }
 }
 

@@ -18,9 +18,12 @@ instance_name    = "Atlas"
 num_instances                       = 1
 instance_ad_number                  = 0
 instance_shape                      = "VM.Standard.A1.Flex"
-instance_ocpus                      = 4
-instance_shape_config_memory_in_gbs = 24
+instance_ocpus                      = 2
+instance_shape_config_memory_in_gbs = 12
 boot_volume_size_in_gbs             = 100
+
+# Set to false to lift the Always Free limit checks (paid account)
+# enforce_free_tier_limits = false
 
 # networking parameters
 

@@ -6,23 +6,18 @@ Personalized compute instance deployment configuration for Oracle Cloud Infrastr
 
 > **Micro instances (AMD processor)**: All tenancies get two Always Free VM instances using the VM.Standard.E2.1.Micro shape, which has an AMD processor.
 
-> **Ampere A1 Compute instances (Arm processor)**: All tenancies get the first 3,000 OCPU hours and 18,000 GB hours per month for free for VM instances using the VM.Standard.A1.Flex shape, which has an Arm processor. For Always Free tenancies, this is equivalent to 4 OCPUs and 24 GB of memory.
+> **Ampere A1 Compute instances (Arm processor)**: All tenancies get the first 1,500 OCPU hours and 9,000 GB hours per month for free for VM instances using the VM.Standard.A1.Flex shape, which has an Arm processor. For Always Free tenancies, this is equivalent to 2 OCPUs and 12 GB of memory.
 
 You can also distribute this resources equally into multiple instances by configuring the variables like in the examples below.
 
 ```hcl
 # One instance
 num_instances                       = 1
-instance_ocpus                      = 4
-instance_shape_config_memory_in_gbs = 24
-
-# Two instances
-num_instances                       = 2
 instance_ocpus                      = 2
 instance_shape_config_memory_in_gbs = 12
 
-# Four instances
-num_instances                       = 4
+# Two instances
+num_instances                       = 2
 instance_ocpus                      = 1
 instance_shape_config_memory_in_gbs = 6
 ```
@@ -55,10 +50,13 @@ terraform apply -replace="oci_core_instance.atlas_instance[0]"
 
 ## Free tier limits
 
-The module validates your configuration against the Always Free allowances:
+The module validates your configuration against the current [Always Free allowances](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm):
 
-- **Block storage (hard limit)**: 200 GB in total. `num_instances × boot_volume_size_in_gbs` must stay below 200 (e.g. `2 × 99` or `4 × 49`); plans exceeding it fail validation.
-- **A1 budget (warnings)**: 4 OCPUs and 24 GB of memory in total across all instances. Exceeding these emits a warning during plan (useful if you also consume the budget outside this module).
+- **Compute instances**: at most 2 instances in total (applies to both `VM.Standard.A1.Flex` and `VM.Standard.E2.1.Micro`).
+- **A1 budget**: 2 OCPUs and 12 GB of memory in total across all instances (`num_instances × instance_ocpus` and `num_instances × instance_shape_config_memory_in_gbs`).
+- **Block storage**: 200 GB in total; `num_instances × boot_volume_size_in_gbs` must not exceed 200 (e.g. `2 × 100` or `4 × 50`), and each boot volume must be at least 47 GB.
+
+When `enforce_free_tier_limits` is `true` (the default), exceeding any of these fails validation during plan. Set it to `false` to lift the checks — useful with a paid account, or when the Always Free budget is shared with resources deployed outside this module.
 
 All created resources are tagged with `ManagedBy = "terraform"` plus anything you pass to `freeform_tags`.
 
@@ -76,7 +74,7 @@ object_storage_buckets = [
 ]
 ```
 
-The Always Free tier includes 10 GB of Standard and 10 GB of Archive object storage. A bucket created here can also serve as the Terraform state backend described above.
+The Always Free tier includes 20 GB of combined Standard, Infrequent Access and Archive object storage. A bucket created here can also serve as the Terraform state backend described above.
 
 ### Autonomous Database
 
@@ -227,8 +225,9 @@ The tables below are auto-generated with [terraform-docs](https://terraform-docs
 | <a name="input_autonomous_database_display_name"></a> [autonomous\_database\_display\_name](#input\_autonomous\_database\_display\_name) | Display name of the Autonomous Database. | `string` | `"free-tier-db"` | no |
 | <a name="input_autonomous_database_enabled"></a> [autonomous\_database\_enabled](#input\_autonomous\_database\_enabled) | Create an Always Free Autonomous Database. Disabled by default. | `bool` | `false` | no |
 | <a name="input_autonomous_database_workload"></a> [autonomous\_database\_workload](#input\_autonomous\_database\_workload) | Workload type: OLTP (Autonomous Transaction Processing) or DW (Autonomous Data Warehouse). | `string` | `"OLTP"` | no |
-| <a name="input_boot_volume_size_in_gbs"></a> [boot\_volume\_size\_in\_gbs](#input\_boot\_volume\_size\_in\_gbs) | Boot volume size in GBs per instance. The Always Free tier includes 200 GB of block storage in total, so num\_instances × boot\_volume\_size\_in\_gbs must stay below 200. | `number` | `100` | no |
+| <a name="input_boot_volume_size_in_gbs"></a> [boot\_volume\_size\_in\_gbs](#input\_boot\_volume\_size\_in\_gbs) | Boot volume size in GBs per instance. The Always Free tier includes 200 GB of block storage in total, so num\_instances × boot\_volume\_size\_in\_gbs must not exceed 200. | `number` | `100` | no |
 | <a name="input_compartment_ocid"></a> [compartment\_ocid](#input\_compartment\_ocid) | Compartment ocid where to create all resources | `string` | n/a | yes |
+| <a name="input_enforce_free_tier_limits"></a> [enforce\_free\_tier\_limits](#input\_enforce\_free\_tier\_limits) | Fail validation when the deployment exceeds the Always Free allowances: 2 instances in total, 2 A1 OCPUs and 12 GB of A1 memory in total, 200 GB of total boot volume storage and a 47 GB minimum boot volume. Set to false to lift these checks (paid account, or budget shared with resources outside this module). | `bool` | `true` | no |
 | <a name="input_fingerprint"></a> [fingerprint](#input\_fingerprint) | Fingerprint of oci api private key. Leave unset to use the OCI CLI configuration file (~/.oci/config). | `string` | `null` | no |
 | <a name="input_freeform_tags"></a> [freeform\_tags](#input\_freeform\_tags) | Freeform tags applied to all created resources (merged over the default { ManagedBy = "terraform" }). | `map(string)` | `{}` | no |
 | <a name="input_image_os_version"></a> [image\_os\_version](#input\_image\_os\_version) | Operating system version used when selecting the image automatically (e.g. "24.04"). | `string` | `"24.04"` | no |
